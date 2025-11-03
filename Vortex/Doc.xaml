@@ -1,0 +1,286 @@
+﻿<Window x:Class="test5.Doc"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wpfAnimatedGif="http://wpfanimatedgif.codeplex.com"
+        Title="Авторизация" Height="400" Width="800"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" ResizeMode="NoResize" Background="#FF4A4A4A">
+
+    <Grid>
+
+        <!-- MediaElement для фона -->
+        <MediaElement x:Name="BackgroundVideo" 
+              LoadedBehavior="Manual" 
+              UnloadedBehavior="Manual"
+              IsMuted="True" 
+              Stretch="UniformToFill" Margin="0,0,-20,0" />
+
+        <!-- Приветственный текст VORTEX -->
+        <TextBlock Text="VORTEX" 
+                   FontSize="48" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Top" 
+                   Margin="83,318,0,0" Height="68" Width="222" FontFamily="Verdana">
+            <TextBlock.Foreground>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FF0E2E47" Offset="1"/>
+                    <GradientStop Color="#FF2C5474" Offset="0"/>
+                </LinearGradientBrush>
+            </TextBlock.Foreground>
+        </TextBlock>
+
+        <!-- Приветственный текст VORTEX -->
+        <TextBlock Text="future industries" 
+           FontSize="13" 
+           FontWeight="Bold" 
+           HorizontalAlignment="Left" 
+           VerticalAlignment="Top" 
+           Margin="179,366,0,0" Height="22" Width="123" FontFamily="Verdana">
+            <TextBlock.Foreground>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FF133F61" Offset="1"/>
+                    <GradientStop Color="#FF2C5474" Offset="0"/>
+                </LinearGradientBrush>
+            </TextBlock.Foreground>
+        </TextBlock>
+
+        <!-- Добавляем Image для отображения GIF-анимации -->
+        <Image x:Name="BeeGif"
+               HorizontalAlignment="Left" VerticalAlignment="Top"
+               Width="89" Height="90"
+               Stretch="Uniform"
+               wpfAnimatedGif:ImageBehavior.AnimatedSource="pack://application:,,,/Assets/Images/123.gif"
+               wpfAnimatedGif:ImageBehavior.AutoStart="True" Grid.Column="1" Margin="1,308,0,0"/>
+
+        <!-- Контейнер для TextBox и подсказки -->
+        <Grid Margin="390,275,65,90">
+            <TextBlock x:Name="ErrorMessage" Foreground="Red" HorizontalAlignment="Center" 
+                   VerticalAlignment="Top" Width="326" Height="27" TextAlignment="Center" FontSize="14" Margin="0,2,0,0"/>
+        </Grid>
+
+        <!-- Контейнер для PasswordBox, логина и подсказок и кнопки вход и выход -->
+        <Grid Margin="360,45,35,88">
+
+            <!-- Поле для ввода пароля -->
+            <TextBlock x:Name="PasswordPlaceholder" Text="Пароль:" Foreground="White" 
+                       VerticalAlignment="Top" HorizontalAlignment="Left" Margin="38,136,0,0" 
+                       FontFamily="Microsoft JhengHei Light" Height="15" Width="172"/>
+
+            <!-- Кнопка входа -->
+            <Button x:Name="LoginButton" Width="150" Height="30" Content="Вход" 
+                          VerticalAlignment="Top" HorizontalAlignment="Left" Margin="28,210,0,0" 
+                           Click="LoginButton_Click" IsDefault="True">
+
+                <Button.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="scaleTransform"/>
+                        <SkewTransform AngleX="-0.01"/>
+                        <RotateTransform/>
+                        <TranslateTransform X="11.234"/>
+                    </TransformGroup>
+                </Button.RenderTransform>
+
+                <!-- Шаблон кнопки (ControlTemplate) -->
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid x:Name="buttonGrid">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="border" Storyboard.TargetProperty="(Border.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)"
+                                                To="#163b54" Duration="0:0:0.3"/>
+                                            <ColorAnimation Storyboard.TargetName="border" Storyboard.TargetProperty="(Border.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)"
+                                                To="#697d8c" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="neonBorder"
+                                                 To="0" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="BlurRadius" Storyboard.TargetName="dropShadowEffect"
+                                                 To="10" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="ScaleX" Storyboard.TargetName="scaleTransform" To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="ScaleY" Storyboard.TargetName="scaleTransform" To="1" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="MouseOver">
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="border" Storyboard.TargetProperty="(Border.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)"
+                                                To="#697d8c" Duration="0:0:0.3"/>
+                                            <ColorAnimation Storyboard.TargetName="border" Storyboard.TargetProperty="(Border.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)"
+                                                To="#163b54" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="neonBorder"
+                                                 To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="BlurRadius" Storyboard.TargetName="dropShadowEffect"
+                                                 To="100" Duration="0:0:0.3"/>
+                                            <ColorAnimation Storyboard.TargetProperty="Color" Storyboard.TargetName="dropShadowEffect"
+                                                 To="#dde1e5" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="ScaleX" Storyboard.TargetName="scaleTransform" To="1.1" Duration="0:0:0.4"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="ScaleY" Storyboard.TargetName="scaleTransform" To="1.1" Duration="0:0:0.4"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <!-- При нажатии возвращаем масштаб к исходному значению -->
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                 Storyboard.TargetProperty="ScaleX"
+                 To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                 Storyboard.TargetProperty="ScaleY"
+                 To="1" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="scaleTransform" ScaleX="1" ScaleY="1"/>
+                            </Grid.RenderTransform>
+
+                            <Grid.RenderTransformOrigin>
+                                <Point X="0.5" Y="0.5"/>
+                            </Grid.RenderTransformOrigin>
+
+                            <Border x:Name="border" BorderBrush="{x:Null}" BorderThickness="0">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#0e2e47" Offset="0.5"/>
+                                        <GradientStop Color="#2c5474" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+
+                                <Border.Effect>
+                                    <DropShadowEffect x:Name="dropShadowEffect" Color="Black" BlurRadius="10" ShadowDepth="5" Direction="90" Opacity="0.5"/>
+                                </Border.Effect>
+                            </Border>
+
+                            <Border x:Name="neonBorder" Height="2" VerticalAlignment="Bottom" Background="#00FFFF" Opacity="1"/>
+
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="16" Text="Вход"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Поле для ввода логина -->
+            <TextBox x:Name="UsernameTextBox" Width="332" Height="30" Margin="0,92,0,0" 
+                    VerticalAlignment="Top" HorizontalAlignment="Center" 
+                    BorderBrush="{x:Null}" VerticalContentAlignment="Center" FontSize="22" Text=""/>
+
+            <TextBlock x:Name="UsernamePlaceholder" Text="Логин:" Foreground="White" VerticalAlignment="Top" 
+                       HorizontalAlignment="Left" Margin="38,76,0,0" FontFamily="Microsoft JhengHei Light" Height="14" Width="172"/>
+
+            <!-- Поле для ввода Названий компаний -->
+            <TextBox x:Name="UsernameTextBox1" Width="332" Height="30" Margin="0,35,0,0" 
+                     VerticalAlignment="Top" HorizontalAlignment="Center" 
+                     BorderBrush="{x:Null}" VerticalContentAlignment="Center" FontSize="22" Text=""/>
+
+            <TextBlock x:Name="UsernamePlaceholder1" Text="Компания:" Foreground="White" VerticalAlignment="Top" 
+                       HorizontalAlignment="Left" Margin="38,18,0,0" FontFamily="Microsoft JhengHei Light" Height="14" Width="172"/>
+
+            <!-- Чекбокс для запоминания логина -->
+            <CheckBox x:Name="RememberLoginCheckBox" Content="Запомнить логин" 
+                      VerticalAlignment="Top" HorizontalAlignment="Left" Margin="38,186,0,0" 
+                      Foreground="White" Background="White" Width="166" BorderBrush="{x:Null}"/>
+            <!-- Этот CheckBox позволит сохранить логин, чтобы при следующем входе пользователь вводил только пароль -->
+
+            <!-- Кнопка выхода -->
+            <Button x:Name="LoginButton2" Width="150" Height="30" Content="Выход" 
+                    VerticalAlignment="Top" HorizontalAlignment="Left" Margin="208,211,0,0" 
+                    Click="YesButton_Click">
+                <Button.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="scaleTransform1"/>
+                        <SkewTransform AngleX="-0.01"/>
+                        <RotateTransform/>
+                        <TranslateTransform X="11.234"/>
+                    </TransformGroup>
+                </Button.RenderTransform>
+
+                <!-- Шаблон кнопки (ControlTemplate) -->
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid x:Name="buttonGrid">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="border" Storyboard.TargetProperty="(Border.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)"
+                                                    To="#163b54" Duration="0:0:0.3"/>
+                                            <ColorAnimation Storyboard.TargetName="border" Storyboard.TargetProperty="(Border.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)"
+                                                    To="#697d8c" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="neonBorder"
+                                                    To="0" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="BlurRadius" Storyboard.TargetName="dropShadowEffect"
+                                                    To="10" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="ScaleX" Storyboard.TargetName="scaleTransform" To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="ScaleY" Storyboard.TargetName="scaleTransform" To="1" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="MouseOver">
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="border" Storyboard.TargetProperty="(Border.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)"
+                                                    To="#697d8c" Duration="0:0:0.3"/>
+                                            <ColorAnimation Storyboard.TargetName="border" Storyboard.TargetProperty="(Border.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)"
+                                                    To="#163b54" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="neonBorder"
+                                                    To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="BlurRadius" Storyboard.TargetName="dropShadowEffect"
+                                                    To="100" Duration="0:0:0.3"/>
+                                            <ColorAnimation Storyboard.TargetProperty="Color" Storyboard.TargetName="dropShadowEffect"
+                                                    To="#dde1e5" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="ScaleX" Storyboard.TargetName="scaleTransform" To="1.1" Duration="0:0:0.4"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="ScaleY" Storyboard.TargetName="scaleTransform" To="1.1" Duration="0:0:0.4"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <!-- При нажатии возвращаем масштаб к исходному значению -->
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                 Storyboard.TargetProperty="ScaleX"
+                 To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                 Storyboard.TargetProperty="ScaleY"
+                 To="1" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="scaleTransform" ScaleX="1" ScaleY="1"/>
+                            </Grid.RenderTransform>
+
+                            <Grid.RenderTransformOrigin>
+                                <Point X="0.5" Y="0.5"/>
+                            </Grid.RenderTransformOrigin>
+
+                            <Border x:Name="border" BorderBrush="{x:Null}" BorderThickness="0">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#0e2e47" Offset="0.5"/>
+                                        <GradientStop Color="#2c5474" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+
+                                <Border.Effect>
+                                    <DropShadowEffect x:Name="dropShadowEffect" Color="Black" BlurRadius="10" ShadowDepth="5" Direction="90" Opacity="0.5"/>
+                                </Border.Effect>
+                            </Border>
+
+                            <Border x:Name="neonBorder" Height="2" VerticalAlignment="Bottom" Background="#00FFFF" Opacity="1"/>
+
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="16" Text="Выход"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <PasswordBox x:Name="PasswordBox" Width="332" Height="30" Margin="0,152,0,0" 
+             VerticalAlignment="Top" HorizontalAlignment="Center" 
+             BorderBrush="{x:Null}" FontSize="22" VerticalContentAlignment="Center"/>
+            
+        </Grid>
+
+    </Grid>
+    
+</Window>
