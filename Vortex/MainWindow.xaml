@@ -532,7 +532,6 @@ To="1" Duration="0:0:0.3"/>
         </Viewbox>
 
 
-
         <!-- 🟦 Отдельный Viewbox для кнопки выхода и свернуть -->
         <Viewbox Stretch="Uniform"
              HorizontalAlignment="Right"
@@ -796,6 +795,337 @@ To="1" Duration="0:0:0.3"/>
             </Grid>
             
         </Viewbox>
+
+        <!-- 🟦 Отдельный Viewbox для кнопки меню инструментов -->
+        <Viewbox Stretch="Uniform"
+         HorizontalAlignment="Left"
+         VerticalAlignment="Bottom"
+         Margin="10,0,0,10">
+
+            <Grid Width="2560" Height="1440">
+
+                <!-- 🔹 Верхний ряд -->
+                <!-- Кнопка Сотрудники -->
+                <Button x:Name="Ex_Инструменты1_1" Content="1"
+    HorizontalAlignment="Left" VerticalAlignment="Bottom"
+    Height="50" Width="50"
+    BorderBrush="#FF0A3AFD" BorderThickness="10,10,0,0"
+    RenderTransformOrigin="0.5,0.5"
+     MouseEnter="Exit_MouseEnter" MouseLeave="Exit_MouseLeave"
+    Margin="-100,0,0,50" 
+            Opacity="0">
+
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform AngleX="-16.35"/>
+                            <RotateTransform Angle="180"/>
+                            <TranslateTransform X="-1.973"/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid x:Name="buttonGrid">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal">
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="neonBorder" 
+                Storyboard.TargetProperty="Opacity"
+                To="0" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleX"
+                To="1" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleY"
+                To="1" Duration="0:0:0.3"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="MouseOver">
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="neonBorder" 
+                Storyboard.TargetProperty="Opacity"
+                To="1" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleX"
+                To="1.1" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleY"
+                To="1.1" Duration="0:0:0.3"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <!-- Новое состояние при нажатии -->
+                                        <VisualState x:Name="Pressed">
+                                            <Storyboard>
+                                                <!-- Возвращаем масштаб к исходному значению -->
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleX"
+                To="1" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleY"
+                To="1" Duration="0:0:0.3"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Grid.RenderTransform>
+                                    <ScaleTransform x:Name="scaleTransform" ScaleX="1" ScaleY="1"/>
+                                </Grid.RenderTransform>
+                                <Grid.RenderTransformOrigin>
+                                    <Point X="0" Y="0"/>
+                                </Grid.RenderTransformOrigin>
+
+                                <Border x:Name="border" BorderBrush="#FF0A3AFD" BorderThickness="0">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#0e2e47" Offset="0.5"/>
+                                            <GradientStop Color="#2c5474" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Border.Effect>
+                                        <DropShadowEffect x:Name="dropShadowEffect" Color="Black" BlurRadius="10" 
+        ShadowDepth="5" Direction="90" Opacity="0.5"/>
+                                    </Border.Effect>
+                                </Border>
+                                <Border x:Name="neonBorder" Height="4" VerticalAlignment="Top"
+Background="#00FFFF" Opacity="0"/>
+                                <!-- Изображение внутри кнопки с анимированным GIF -->
+                                <Image x:Name="GifImage" Margin="23,3,-10,3"
+RenderTransformOrigin="0.5,0.5"
+wpfAnimatedGif:ImageBehavior.AnimatedSource="/Assets/Images/user.gif"
+wpfAnimatedGif:ImageBehavior.AutoStart="False"
+wpfAnimatedGif:ImageBehavior.RepeatBehavior="Forever">
+                                    <Image.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform ScaleX="1"/>
+                                            <SkewTransform AngleX="14.085" AngleY="-0.034"/>
+                                            <RotateTransform Angle="180"/>
+                                            <TranslateTransform X="-16.49" Y="0.031"/>
+                                        </TransformGroup>
+                                    </Image.RenderTransform>
+                                </Image>
+                            </Grid>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                               
+                <!-- 🔸 Нижний ряд -->
+                <!-- Кнопка Сотрудники -->
+                <Button x:Name="Ex_Инструменты1" Content="1"
+    HorizontalAlignment="Left" VerticalAlignment="Bottom"
+    Height="50" Width="50"
+    BorderBrush="#FF0A3AFD" BorderThickness="10,10,0,0"
+    RenderTransformOrigin="0.5,0.5"
+     MouseEnter="Exit_MouseEnter" MouseLeave="Exit_MouseLeave"
+    Margin="-100,0,0,-10" 
+            Opacity="0">
+
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform AngleX="-16.35"/>
+                            <RotateTransform Angle="180"/>
+                            <TranslateTransform X="-1.973"/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid x:Name="buttonGrid">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal">
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="neonBorder" 
+                Storyboard.TargetProperty="Opacity"
+                To="0" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleX"
+                To="1" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleY"
+                To="1" Duration="0:0:0.3"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="MouseOver">
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="neonBorder" 
+                Storyboard.TargetProperty="Opacity"
+                To="1" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleX"
+                To="1.1" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleY"
+                To="1.1" Duration="0:0:0.3"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <!-- Новое состояние при нажатии -->
+                                        <VisualState x:Name="Pressed">
+                                            <Storyboard>
+                                                <!-- Возвращаем масштаб к исходному значению -->
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleX"
+                To="1" Duration="0:0:0.3"/>
+                                                <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleY"
+                To="1" Duration="0:0:0.3"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Grid.RenderTransform>
+                                    <ScaleTransform x:Name="scaleTransform" ScaleX="1" ScaleY="1"/>
+                                </Grid.RenderTransform>
+                                <Grid.RenderTransformOrigin>
+                                    <Point X="0" Y="0"/>
+                                </Grid.RenderTransformOrigin>
+
+                                <Border x:Name="border" BorderBrush="#FF0A3AFD" BorderThickness="0">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#0e2e47" Offset="0.5"/>
+                                            <GradientStop Color="#2c5474" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Border.Effect>
+                                        <DropShadowEffect x:Name="dropShadowEffect" Color="Black" BlurRadius="10" 
+        ShadowDepth="5" Direction="90" Opacity="0.5"/>
+                                    </Border.Effect>
+                                </Border>
+                                <Border x:Name="neonBorder" Height="4" VerticalAlignment="Top"
+Background="#00FFFF" Opacity="0"/>
+                                <!-- Изображение внутри кнопки с анимированным GIF -->
+                                <Image x:Name="GifImage" Margin="23,3,-10,3"
+RenderTransformOrigin="0.5,0.5"
+wpfAnimatedGif:ImageBehavior.AnimatedSource="/Assets/Images/user.gif"
+wpfAnimatedGif:ImageBehavior.AutoStart="False"
+wpfAnimatedGif:ImageBehavior.RepeatBehavior="Forever">
+                                    <Image.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform ScaleX="1"/>
+                                            <SkewTransform AngleX="14.085" AngleY="-0.034"/>
+                                            <RotateTransform Angle="180"/>
+                                            <TranslateTransform X="-16.49" Y="0.031"/>
+                                        </TransformGroup>
+                                    </Image.RenderTransform>
+                                </Image>
+                            </Grid>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <!-- Кнопка инструменты -->
+                <Button x:Name="Ex_Инструменты" Content="Инструменты"
+                        HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                        Height="110" Width="145"
+                        BorderBrush="#FF0A3AFD" BorderThickness="10,10,0,0"
+                        RenderTransformOrigin="0.5,0.5"
+                        Click="Ex_Инструменты_Click" MouseEnter="Exit_MouseEnter" MouseLeave="Exit_MouseLeave"
+                        Margin="-25,0,0,-10">
+
+                <Button.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform AngleX="-16.35"/>
+                        <RotateTransform Angle="180"/>
+                        <TranslateTransform X="-1.973"/>
+                    </TransformGroup>
+                </Button.RenderTransform>
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid x:Name="buttonGrid">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="neonBorder" 
+                                    Storyboard.TargetProperty="Opacity"
+                                    To="0" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                    Storyboard.TargetProperty="ScaleX"
+                                    To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                    Storyboard.TargetProperty="ScaleY"
+                                    To="1" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="MouseOver">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="neonBorder" 
+                                    Storyboard.TargetProperty="Opacity"
+                                    To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                    Storyboard.TargetProperty="ScaleX"
+                                    To="1.1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                    Storyboard.TargetProperty="ScaleY"
+                                    To="1.1" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <!-- Новое состояние при нажатии -->
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <!-- Возвращаем масштаб к исходному значению -->
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                    Storyboard.TargetProperty="ScaleX"
+                                    To="1" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                    Storyboard.TargetProperty="ScaleY"
+                                    To="1" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="scaleTransform" ScaleX="1" ScaleY="1"/>
+                            </Grid.RenderTransform>
+                            <Grid.RenderTransformOrigin>
+                                <Point X="0" Y="0"/>
+                            </Grid.RenderTransformOrigin>
+
+                            <Border x:Name="border" BorderBrush="#FF0A3AFD" BorderThickness="0">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#0e2e47" Offset="0.5"/>
+                                        <GradientStop Color="#2c5474" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Border.Effect>
+                                    <DropShadowEffect x:Name="dropShadowEffect" Color="Black" BlurRadius="10" 
+                            ShadowDepth="5" Direction="90" Opacity="0.5"/>
+                                </Border.Effect>
+                            </Border>
+                            <Border x:Name="neonBorder" Height="4" VerticalAlignment="Top"
+                    Background="#00FFFF" Opacity="0"/>
+                            <!-- Изображение внутри кнопки с анимированным GIF -->
+                            <Image x:Name="GifImage" Margin="28,2,8,4"
+                    RenderTransformOrigin="0.5,0.5"
+                    wpfAnimatedGif:ImageBehavior.AnimatedSource="/Assets/Images/tools.gif"
+                    wpfAnimatedGif:ImageBehavior.AutoStart="False"
+                    wpfAnimatedGif:ImageBehavior.RepeatBehavior="Forever">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="1"/>
+                                        <SkewTransform AngleX="14.085" AngleY="-0.034"/>
+                                        <RotateTransform Angle="180"/>
+                                        <TranslateTransform X="-16.49" Y="0.031"/>
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
+                        </Grid>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+               
+
+
+            </Grid>
+
+
+        </Viewbox>
+        
         
     </Grid>
     

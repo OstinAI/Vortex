@@ -21,7 +21,7 @@
                    FontWeight="Bold" 
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Top" 
-                   Margin="83,318,0,0" Height="68" Width="222" FontFamily="Verdana">
+                   Margin="83,318,0,0" Height="68" Width="299" FontFamily="Verdana">
             <TextBlock.Foreground>
                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                     <GradientStop Color="#FF0E2E47" Offset="1"/>
@@ -30,13 +30,28 @@
             </TextBlock.Foreground>
         </TextBlock>
 
-        <!-- Приветственный текст VORTEX -->
-        <TextBlock Text="future industries" 
+        <!-- Текст версий -->
+        <TextBlock x:Name="txtVersion" Text="версия" 
            FontSize="13" 
            FontWeight="Bold" 
            HorizontalAlignment="Left" 
            VerticalAlignment="Top" 
-           Margin="179,366,0,0" Height="22" Width="123" FontFamily="Verdana">
+           Margin="677,377,0,0" Height="22" Width="123" FontFamily="Verdana">
+            <TextBlock.Foreground>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FF133F61" Offset="1"/>
+                    <GradientStop Color="#FF2C5474" Offset="0"/>
+                </LinearGradientBrush>
+            </TextBlock.Foreground>
+        </TextBlock>
+
+        <!-- Приветственный текст VORTEX -->
+        <TextBlock Text="future industries" 
+                   FontSize="13" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Top" 
+                   Margin="179,366,0,0" Height="22" Width="123" FontFamily="Verdana">
             <TextBlock.Foreground>
                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                     <GradientStop Color="#FF133F61" Offset="1"/>
@@ -56,11 +71,11 @@
         <!-- Контейнер для TextBox и подсказки -->
         <Grid Margin="390,275,65,90">
             <TextBlock x:Name="ErrorMessage" Foreground="Red" HorizontalAlignment="Center" 
-                   VerticalAlignment="Top" Width="326" Height="27" TextAlignment="Center" FontSize="14" Margin="0,2,0,0"/>
+                   VerticalAlignment="Top" Width="326" Height="27" TextAlignment="Center" FontSize="14" Margin="0,16,0,0"/>
         </Grid>
 
         <!-- Контейнер для PasswordBox, логина и подсказок и кнопки вход и выход -->
-        <Grid Margin="360,45,35,88">
+        <Grid Margin="360,45,35,70">
 
             <!-- Поле для ввода пароля -->
             <TextBlock x:Name="PasswordPlaceholder" Text="Пароль:" Foreground="White" 
@@ -278,9 +293,9 @@
             <PasswordBox x:Name="PasswordBox" Width="332" Height="30" Margin="0,152,0,0" 
              VerticalAlignment="Top" HorizontalAlignment="Center" 
              BorderBrush="{x:Null}" FontSize="22" VerticalContentAlignment="Center"/>
-            
+
         </Grid>
 
     </Grid>
-    
+
 </Window>

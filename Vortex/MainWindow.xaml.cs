@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using WpfAnimatedGif;
-using System.Text;
 
 
 namespace Vortex
@@ -20,10 +22,23 @@ namespace Vortex
         private TextBlock _txtInButton;
         private TextBlock _txtPogoda;
         private TextBlock _txtSotr; // 🟢 добавляем (если захочешь кэшировать ссылку)
+        private bool _isShown = false;
+        private List<Button> bottomRow = new List<Button>();
+        private List<Button> topRow = new List<Button>();
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // добавляем кнопки в список по порядку
+            // нижний ряд
+            bottomRow.Add(Ex_Инструменты1);
+       
+        
+
+            // верхний ряд
+            topRow.Add(Ex_Инструменты1_1);
+            topRow.Add(Ex_Инструменты2_1);
 
             // 🟢 Сотрудники
             sotr.ApplyTemplate();
@@ -57,6 +72,82 @@ namespace Vortex
 
             StartClock();
         }
+
+
+        private void Ex_Инструменты_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_isShown)
+            {
+                double startLeft = 120;   // базовая позиция первой кнопки
+                double step = 57;         // расстояние между кнопками
+                double delayStep = 0.2;   // задержка между появлением
+                double offsetX_bottom = 0; // ← смещение нижнего ряда (0 = без сдвига)
+                double offsetX_top = 17;    // ← смещение верхнего ряда (вправо на 3px; отрицательное — влево)
+
+                // 🟢 Нижний ряд
+                AnimateRow(
+                    bottomRow,
+                    show: true,
+                    startLeft: startLeft + offsetX_bottom,
+                    step: step,
+                    delayStep: delayStep,
+                    bottomMargin: -10
+                );
+
+                // 🔵 Верхний ряд
+                AnimateRow(
+                    topRow,
+                    show: true,
+                    startLeft: startLeft + offsetX_top,
+                    step: step,
+                    delayStep: delayStep,
+                    bottomMargin: 50
+                );
+            }
+            else
+            {
+                // 🔴 Закрытие (анимация обратная)
+                double offsetX_bottom = 0;
+                double offsetX_top = 3;
+
+                AnimateRow(bottomRow, false, -100 + offsetX_bottom, 50, 0.2, -10);
+                AnimateRow(topRow, false, -100 + offsetX_top, 50, 0.2, 50);
+            }
+
+            _isShown = !_isShown;
+        }
+
+
+        private void AnimateRow(List<Button> row, bool show, double startLeft, double step, double delayStep, double bottomMargin)
+        {
+            for (int i = 0; i < row.Count; i++)
+            {
+                double left = show ? startLeft + i * step : -100;
+                double delay = i * delayStep;
+
+                var moveAnim = new ThicknessAnimation
+                {
+                    To = new Thickness(left, 0, 0, bottomMargin),
+                    Duration = TimeSpan.FromSeconds(0.5),
+                    BeginTime = TimeSpan.FromSeconds(delay),
+                    EasingFunction = new QuadraticEase
+                    {
+                        EasingMode = show ? EasingMode.EaseOut : EasingMode.EaseIn
+                    }
+                };
+
+                var opacityAnim = new DoubleAnimation
+                {
+                    To = show ? 1 : 0,
+                    Duration = TimeSpan.FromSeconds(0.4),
+                    BeginTime = TimeSpan.FromSeconds(delay)
+                };
+
+                row[i].BeginAnimation(MarginProperty, moveAnim);
+                row[i].BeginAnimation(OpacityProperty, opacityAnim);
+            }
+        }
+
 
 
         // 🕒 Видео фон
@@ -394,6 +485,8 @@ namespace Vortex
         {
             LoadSotrudnikiCount();
         }
+
+
     }
 
 

@@ -19,6 +19,19 @@ namespace test5
         {
             InitializeComponent();
 
+            // 🟢 Проверка обновлений при запуске программы
+            try
+            {
+                Vortex.Updater.CheckForUpdates();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка проверки обновлений: {ex.Message}");
+            }
+
+            // Загрузить версию программы
+            LoadVersion();
+
             // 🟢 Автозаполнение
             if (!string.IsNullOrEmpty(Settings.Default.SavedCompany))
                 UsernameTextBox1.Text = Settings.Default.SavedCompany;
@@ -51,9 +64,36 @@ namespace test5
                 };
                 BackgroundVideo.Play();
             }
-            catch { }
+            catch
+            {
+                Console.WriteLine("⚠️ Ошибка загрузки видео.");
+            }
         }
 
+
+
+        private void LoadVersion()
+        {
+            try
+            {
+                string versionPath = "version.txt";
+                if (File.Exists(versionPath))
+                {
+                    string version = File.ReadAllText(versionPath).Trim();
+                    txtVersion.Text = $"версия {version}";
+                }
+                else
+                {
+                    txtVersion.Text = "версия неизвестна";
+                }
+            }
+            catch
+            {
+                txtVersion.Text = "ошибка версии";
+            }
+        }
+
+        // 🟢 Кнопка "Вход"
         // 🟢 Кнопка "Вход"
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
@@ -70,15 +110,54 @@ namespace test5
             string clientSheetUrl = Settings.Default.ClientSheetUrl;
             string savedCompany = Settings.Default.SavedCompany;
 
+            // Если компания изменилась — сбросить старую ссылку
             if (savedCompany != company)
                 clientSheetUrl = null;
 
-            // 🔹 Сначала проверяем в таблице клиента
+            // 🔹 Если ссылка отсутствует — пробуем получить её из дата-центра по названию компании
+            if (string.IsNullOrEmpty(clientSheetUrl))
+            {
+                try
+                {
+                    using (var http = new HttpClient())
+                    {
+                        string csvUrl =
+                            "https://docs.google.com/spreadsheets/d/14IMOT9VgUNkvbYiRxaY8t1ZGUYWCb-VspQdCT9IS2YI/gviz/tq?tqx=out:csv&sheet=Пользователь";
+                        string csv = await http.GetStringAsync(csvUrl);
+                        csv = Normalize(csv);
+
+                        var rows = ParseCsv(csv);
+                        for (int i = 1; i < rows.Count; i++)
+                        {
+                            var f = rows[i];
+                            if (f.Length < 5) continue;
+
+                            string sheetCompany = Normalize(f[3].Replace("\"", ""));
+                            string dbLink = Normalize(f[4].Replace("\"", ""));
+
+                            if (sheetCompany.Equals(company, StringComparison.OrdinalIgnoreCase))
+                            {
+                                clientSheetUrl = dbLink;
+                                Settings.Default.SavedCompany = company;
+                                Settings.Default.ClientSheetUrl = dbLink;
+                                Settings.Default.Save();
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Ошибка при доступе к дата-центру:\n" + ex.Message);
+                }
+            }
+
+            // 🔹 Проверяем сотрудника (если есть ссылка)
             bool employeeOk = false;
             if (!string.IsNullOrEmpty(clientSheetUrl))
                 employeeOk = await AuthenticateEmployee(username, password, clientSheetUrl);
 
-            // 🔹 Если не найден в клиентской таблице — ищем в дата-центре
+            // 🔹 Если не найден в клиентской таблице — проверяем логин/пароль интегратора
             if (!employeeOk)
             {
                 (bool isIntegrator, string link) = await TryGetLinkFromDataCenter(company, username, password);
@@ -119,6 +198,7 @@ namespace test5
                 ErrorMessage.Text = "Неверный логин или пароль.";
             }
         }
+
 
         // 🔹 Проверка интегратора и получение ссылки компании
         private async Task<(bool isIntegrator, string link)> TryGetLinkFromDataCenter(string company, string username, string password)
