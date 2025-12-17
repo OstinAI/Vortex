@@ -1,13 +1,15 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.VisualBasic.FileIO;
-using System.Text.RegularExpressions;
+using System.Windows.Media;
 using Vortex;
 using Vortex.Properties;
 
@@ -15,24 +17,15 @@ namespace test5
 {
     public partial class Doc : Window
     {
+        private const string APP_VERSION = "1.0.12";
+
         public Doc()
         {
+
             InitializeComponent();
-
-            // 🟢 Проверка обновлений при запуске программы
-            try
-            {
-                Vortex.Updater.CheckForUpdates();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка проверки обновлений: {ex.Message}");
-            }
-
-            // Загрузить версию программы
             LoadVersion();
 
-            // 🟢 Автозаполнение
+
             if (!string.IsNullOrEmpty(Settings.Default.SavedCompany))
                 UsernameTextBox1.Text = Settings.Default.SavedCompany;
 
@@ -42,15 +35,15 @@ namespace test5
                 RememberLoginCheckBox.IsChecked = true;
             }
 
-            // 🟢 Подсказки
             UsernameTextBox.TextChanged += (s, e) =>
                 UsernamePlaceholder.Visibility = UsernameTextBox.Text.Length > 0 ? Visibility.Collapsed : Visibility.Visible;
+
             PasswordBox.PasswordChanged += (s, e) =>
                 PasswordPlaceholder.Visibility = PasswordBox.Password.Length > 0 ? Visibility.Collapsed : Visibility.Visible;
+
             UsernameTextBox1.TextChanged += (s, e) =>
                 UsernamePlaceholder1.Visibility = UsernameTextBox1.Text.Length > 0 ? Visibility.Collapsed : Visibility.Visible;
 
-            // 🟢 Фоновое видео
             try
             {
                 string videoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Video", "8738602291808.mp4");
@@ -66,26 +59,16 @@ namespace test5
             }
             catch
             {
-                Console.WriteLine("⚠️ Ошибка загрузки видео.");
+                Console.WriteLine("Ошибка загрузки видео.");
             }
         }
-
-
 
         private void LoadVersion()
         {
             try
             {
-                string versionPath = "version.txt";
-                if (File.Exists(versionPath))
-                {
-                    string version = File.ReadAllText(versionPath).Trim();
-                    txtVersion.Text = $"версия {version}";
-                }
-                else
-                {
-                    txtVersion.Text = "версия неизвестна";
-                }
+                string version = APP_VERSION;
+                txtVersion.Text = $"версия {version}";
             }
             catch
             {
@@ -93,226 +76,306 @@ namespace test5
             }
         }
 
-        // 🟢 Кнопка "Вход"
-        // 🟢 Кнопка "Вход"
+        private static string HashSHA256(string input)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(input);
+                byte[] hash = sha.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
+        }
+
+        private void HighlightError(Control c)
+        {
+            c.BorderBrush = Brushes.Red;
+            c.BorderThickness = new Thickness(2);
+        }
+
+        private void ClearHighlight(Control c)
+        {
+            c.ClearValue(Border.BorderBrushProperty);
+            c.ClearValue(Border.BorderThicknessProperty);
+        }
+
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             string company = Normalize(UsernameTextBox1.Text);
             string username = Normalize(UsernameTextBox.Text);
             string password = Normalize(PasswordBox.Password);
 
-            if (string.IsNullOrEmpty(company) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            ClearHighlight(UsernameTextBox1);
+            ClearHighlight(UsernameTextBox);
+            ClearHighlight(PasswordBox);
+
+            if (string.IsNullOrEmpty(company) ||
+                string.IsNullOrEmpty(username) ||
+                string.IsNullOrEmpty(password))
             {
                 ErrorMessage.Text = "Введите название компании, логин и пароль.";
+
+                if (string.IsNullOrEmpty(company)) HighlightError(UsernameTextBox1);
+                if (string.IsNullOrEmpty(username)) HighlightError(UsernameTextBox);
+                if (string.IsNullOrEmpty(password)) HighlightError(PasswordBox);
                 return;
             }
 
-            string clientSheetUrl = Settings.Default.ClientSheetUrl;
-            string savedCompany = Settings.Default.SavedCompany;
+            string passwordHash = HashSHA256(password);
 
-            // Если компания изменилась — сбросить старую ссылку
-            if (savedCompany != company)
-                clientSheetUrl = null;
-
-            // 🔹 Если ссылка отсутствует — пробуем получить её из дата-центра по названию компании
-            if (string.IsNullOrEmpty(clientSheetUrl))
+            var loginObj = new
             {
-                try
-                {
-                    using (var http = new HttpClient())
-                    {
-                        string csvUrl =
-                            "https://docs.google.com/spreadsheets/d/14IMOT9VgUNkvbYiRxaY8t1ZGUYWCb-VspQdCT9IS2YI/gviz/tq?tqx=out:csv&sheet=Пользователь";
-                        string csv = await http.GetStringAsync(csvUrl);
-                        csv = Normalize(csv);
+                company = company,
+                username = username,
+                password = passwordHash
+            };
 
-                        var rows = ParseCsv(csv);
-                        for (int i = 1; i < rows.Count; i++)
-                        {
-                            var f = rows[i];
-                            if (f.Length < 5) continue;
-
-                            string sheetCompany = Normalize(f[3].Replace("\"", ""));
-                            string dbLink = Normalize(f[4].Replace("\"", ""));
-
-                            if (sheetCompany.Equals(company, StringComparison.OrdinalIgnoreCase))
-                            {
-                                clientSheetUrl = dbLink;
-                                Settings.Default.SavedCompany = company;
-                                Settings.Default.ClientSheetUrl = dbLink;
-                                Settings.Default.Save();
-                                break;
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Ошибка при доступе к дата-центру:\n" + ex.Message);
-                }
-            }
-
-            // 🔹 Проверяем сотрудника (если есть ссылка)
-            bool employeeOk = false;
-            if (!string.IsNullOrEmpty(clientSheetUrl))
-                employeeOk = await AuthenticateEmployee(username, password, clientSheetUrl);
-
-            // 🔹 Если не найден в клиентской таблице — проверяем логин/пароль интегратора
-            if (!employeeOk)
-            {
-                (bool isIntegrator, string link) = await TryGetLinkFromDataCenter(company, username, password);
-                if (isIntegrator)
-                {
-                    Settings.Default.SavedCompany = company;
-                    Settings.Default.ClientSheetUrl = link;
-                    Settings.Default.SavedLogin = username;
-                    Settings.Default.SavedPassword = password;
-                    Settings.Default.Save();
-
-                    OpenMainWindow();
-                    return;
-                }
-                else if (!string.IsNullOrEmpty(link))
-                {
-                    // нашли компанию клиента, но не сотрудника
-                    Settings.Default.SavedCompany = company;
-                    Settings.Default.ClientSheetUrl = link;
-                    Settings.Default.Save();
-                    clientSheetUrl = link;
-
-                    // ещё раз проверяем сотрудника после обновления ссылки
-                    employeeOk = await AuthenticateEmployee(username, password, clientSheetUrl);
-                }
-            }
-
-            if (employeeOk)
-            {
-                Settings.Default.SavedLogin = username;
-                Settings.Default.SavedPassword = password;
-                Settings.Default.Save();
-
-                OpenMainWindow();
-            }
-            else
-            {
-                ErrorMessage.Text = "Неверный логин или пароль.";
-            }
-        }
-
-
-        // 🔹 Проверка интегратора и получение ссылки компании
-        private async Task<(bool isIntegrator, string link)> TryGetLinkFromDataCenter(string company, string username, string password)
-        {
             try
             {
                 using (var http = new HttpClient())
                 {
-                    string csvUrl =
-                        "https://docs.google.com/spreadsheets/d/14IMOT9VgUNkvbYiRxaY8t1ZGUYWCb-VspQdCT9IS2YI/gviz/tq?tqx=out:csv&sheet=Пользователь";
-                    string csv = await http.GetStringAsync(csvUrl);
-                    csv = Normalize(csv);
+                    http.Timeout = TimeSpan.FromSeconds(8);
 
-                    var rows = ParseCsv(csv);
-                    for (int i = 1; i < rows.Count; i++)
+                    string url = ApiConfig.AuthLogin;
+
+                    string json = JsonConvert.SerializeObject(loginObj);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    HttpResponseMessage resp = await http.PostAsync(url, content);
+
+                    if (!resp.IsSuccessStatusCode)
                     {
-                        var f = rows[i];
-                        if (f.Length < 5) continue;
+                        ErrorMessage.Text = "Нет связи с сервером.";
+                        HighlightError(UsernameTextBox);
+                        HighlightError(PasswordBox);
+                        return;
+                    }
 
-                        string sheetLogin = Normalize(f[0].Replace("\"", ""));
-                        string sheetPassword = Normalize(f[1].Replace("\"", ""));
-                        string sheetAccess = Normalize(f[2].Replace("\"", ""));
-                        string sheetCompany = Normalize(f[3].Replace("\"", ""));
-                        string dbLink = Normalize(f[4].Replace("\"", ""));
+                    string respJson = await resp.Content.ReadAsStringAsync();
+                    var auth = JsonConvert.DeserializeObject<LoginResponse>(respJson);
 
-                        if (sheetLogin == username && sheetPassword == password &&
-                            sheetCompany.Equals(company, StringComparison.OrdinalIgnoreCase))
+                    if (auth == null || auth.Status != "ok")
+                    {
+                        ErrorMessage.Text = auth?.Message ?? "Неверный логин или пароль.";
+                        PasswordBox.Password = "";
+                        PasswordPlaceholder.Visibility = Visibility.Visible;
+
+                        HighlightError(UsernameTextBox);
+                        HighlightError(PasswordBox);
+                        return;
+                    }
+
+                    GlobalSession.Token = auth.Token;
+                    GlobalSession.Role = auth.Role;
+                    GlobalSession.CompanyId = auth.CompanyId;
+                    GlobalSession.CompanyName = company;
+
+                    // 💾 Сохраняем токен на диск (ОБЯЗАТЕЛЬНО)
+                    Settings.Default.Token = auth.Token;
+                    Settings.Default.Save();
+
+                    if (RememberLoginCheckBox.IsChecked == true)
+                    {
+                        Settings.Default.SavedCompany = company;
+                        Settings.Default.SavedLogin = username;
+                    }
+                    else
+                    {
+                        Settings.Default.SavedCompany = "";
+                        Settings.Default.SavedLogin = "";
+                    }
+
+                    Settings.Default.Save();
+
+                    bool updating = await CheckForUpdatesFromServer();
+
+                    if (updating)
+                        return; // ⛔ НЕ открываем MainWindow
+
+                    OpenMainWindow();
+
+                }
+            }
+            catch
+            {
+                ErrorMessage.Text = "Сервер не отвечает.";
+                HighlightError(UsernameTextBox);
+                HighlightError(PasswordBox);
+            }
+        }
+
+        private async Task<bool> CheckForUpdatesFromServer()
+        {
+            var obj = new
+            {
+                company = GlobalSession.CompanyName,
+                current_version = APP_VERSION
+            };
+
+            using (var http = new HttpClient())
+            {
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(obj),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var resp = await http.PostAsync(ApiConfig.UpdateCheck, content);
+                if (!resp.IsSuccessStatusCode)
+                    return false;
+
+                var result = JsonConvert.DeserializeObject<UpdateCheckResponse>(
+                    await resp.Content.ReadAsStringAsync());
+
+                if (result == null)
+                    return false;
+
+                // 🔴 ОБЯЗАТЕЛЬНОЕ ОБНОВЛЕНИЕ
+                if (result.Status == "update_available" || result.Status == "update_required")
+                {
+                    // блокируем интерфейс
+                    DisableLoginUI();
+
+                    // показываем overlay
+                    UpdateOverlay.Visibility = Visibility.Visible;
+                    UpdateProgress.Visibility = Visibility.Visible;
+                    UpdatePercentText.Text = "0 %";
+                    UpdateTitleText.Text = "Идёт обновление…";
+                    UpdateSubText.Text = "";
+
+                    // ▶ СРАЗУ начинаем обновление
+                    await DownloadAndInstallUpdate(result);
+
+                    return true; // ⛔ дальше вход запрещён
+                }
+            }
+
+            return false; // версии совпадают — можно входить
+        }
+
+        private async Task DownloadAndInstallUpdate(UpdateCheckResponse result)
+        {
+            try
+            {
+                // ===== UI: показываем экран обновления =====
+                UpdateOverlay.Visibility = Visibility.Visible;
+                
+                LoginButton.IsEnabled = false;
+                LoginButton2.IsEnabled = false;
+                UsernameTextBox.IsEnabled = false;
+                UsernameTextBox1.IsEnabled = false;
+                PasswordBox.IsEnabled = false;
+                RememberLoginCheckBox.IsEnabled = false;
+
+                UpdateProgress.Value = 0;
+                UpdatePercentText.Text = "0 %";
+
+                // ===== скачивание =====
+                string downloadUrl = ApiConfig.UpdateDownload(result.File);
+                string tempZip = Path.Combine(Path.GetTempPath(), result.File);
+
+                using (var http = new HttpClient())
+                using (var response = await http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    response.EnsureSuccessStatusCode();
+
+                    long total = response.Content.Headers.ContentLength ?? 1;
+
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    using (var fs = new FileStream(tempZip, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        var buffer = new byte[81920];
+                        long read = 0;
+                        int bytesRead;
+
+                        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                         {
-                            if (sheetAccess.Contains("Админ") || sheetAccess.Contains("Интегратор"))
-                                return (true, dbLink);
-                            else
-                                return (false, dbLink);
+                            await fs.WriteAsync(buffer, 0, bytesRead);
+                            read += bytesRead;
+
+                            int percent = (int)(read * 100 / total);
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                UpdateProgress.Value = percent;
+                                UpdatePercentText.Text = percent + " %";
+                            });
                         }
                     }
                 }
+
+                UpdatePercentText.Text = "Установка...";
+
+                // ===== распаковка =====
+                string tempDir = Path.Combine(Path.GetTempPath(), "VortexUpdate");
+                if (Directory.Exists(tempDir))
+                    Directory.Delete(tempDir, true);
+
+                Directory.CreateDirectory(tempDir);
+                ZipFile.ExtractToDirectory(tempZip, tempDir);
+
+                // ===== BAT =====
+                string script = Path.Combine(tempDir, "update.bat");
+                string exePath = Process.GetCurrentProcess().MainModule.FileName;
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+
+                File.WriteAllText(script,
+        $@"@echo off
+chcp 65001 > nul
+timeout /t 2 > nul
+
+xcopy ""{tempDir}\*"" ""{baseDir}"" /E /Y /Q
+
+start """" ""{exePath}""
+
+rmdir /s /q ""{tempDir}""
+exit
+");
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = script,
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                });
+
+                Application.Current.Shutdown();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка при доступе к дата-центру:\n" + ex.Message);
+                MessageBox.Show("Ошибка обновления:\n" + ex.Message);
             }
-            return (false, null);
         }
 
-        // 🔹 Проверка логина и пароля сотрудника в таблице клиента
-        private async Task<bool> AuthenticateEmployee(string username, string password, string clientSheetUrl)
+        private class LoginResponse
         {
-            try
-            {
-                string id = ExtractSpreadsheetId(clientSheetUrl);
-                if (string.IsNullOrEmpty(id)) return false;
-
-                string sheetName = "Сотрудники";
-                string encoded = Uri.EscapeDataString(sheetName);
-                string csvUrl =
-                    $"https://docs.google.com/spreadsheets/d/{id}/gviz/tq?tqx=out:csv&sheet={encoded}";
-
-                using (var http = new HttpClient())
-                {
-                    string csv = await http.GetStringAsync(csvUrl);
-                    csv = Normalize(csv);
-
-                    var rows = ParseCsv(csv);
-                    if (rows.Count <= 1) return false;
-
-                    // колонки: 0-число, 1-ФИО, 2-должность, 3-логин, 4-пароль
-                    for (int i = 1; i < rows.Count; i++)
-                    {
-                        var f = rows[i];
-                        if (f.Length < 5) continue;
-
-                        string login = Normalize(f[3].Replace("\"", ""));
-                        string pass = Normalize(f[4].Replace("\"", ""));
-
-                        if (login == username && pass == password)
-                            return true;
-                    }
-                }
-            }
-            catch { }
-            return false;
+            public string Status { get; set; }
+            public string Role { get; set; }
+            public string EmployeeRole { get; set; }
+            public string CompanyId { get; set; }
+            public string Token { get; set; }
+            public string Message { get; set; }
         }
 
-        // 🧩 Вспомогательные методы
+        public class UpdateCheckResponse
+        {
+            public string Status { get; set; }
+            public string LatestVersion { get; set; }
+            public string File { get; set; }
+        }
+
+        public static class GlobalSession
+        {
+            public static string Token { get; set; }
+            public static string CompanyId { get; set; }
+            public static string CompanyName { get; set; }
+            public static string Role { get; set; }
+        }
+
         private static string Normalize(string s)
         {
             return (s ?? "")
                 .Replace("\uFEFF", "")
                 .Replace("\u00A0", " ")
                 .Trim();
-        }
-
-        private static List<string[]> ParseCsv(string csv)
-        {
-            var list = new List<string[]>();
-            using (var reader = new StringReader(csv))
-            using (var parser = new TextFieldParser(reader))
-            {
-                parser.SetDelimiters(",");
-                parser.HasFieldsEnclosedInQuotes = true;
-                parser.TrimWhiteSpace = false;
-                while (!parser.EndOfData)
-                {
-                    var fields = parser.ReadFields();
-                    if (fields != null)
-                        list.Add(fields);
-                }
-            }
-            return list;
-        }
-
-        private static string ExtractSpreadsheetId(string url)
-        {
-            var m = Regex.Match(url, @"/spreadsheets/d/([a-zA-Z0-9-_]+)");
-            return m.Success ? m.Groups[1].Value : null;
         }
 
         private void OpenMainWindow()
@@ -326,5 +389,17 @@ namespace test5
         {
             Application.Current.Shutdown();
         }
+                
+        private void DisableLoginUI()
+        {
+            LoginButton.IsEnabled = false;
+            LoginButton2.IsEnabled = false;
+            UsernameTextBox.IsEnabled = false;
+            UsernameTextBox1.IsEnabled = false;
+            PasswordBox.IsEnabled = false;
+            RememberLoginCheckBox.IsEnabled = false;
+        }
+        
+
     }
 }

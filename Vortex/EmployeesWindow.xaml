@@ -1,0 +1,334 @@
+﻿<Window x:Class="Vortex.EmployeesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wpfAnimatedGif="clr-namespace:WpfAnimatedGif;assembly=WpfAnimatedGif"
+        xmlns:vortex="clr-namespace:Vortex"
+        xmlns:local="clr-namespace:Vortex"
+        mc:Ignorable="d"
+
+        Title="EmployeesWindow"
+        MinWidth="1000"
+        MinHeight="700"
+        MaxWidth="1200"
+        MaxHeight="1200"
+
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        WindowStartupLocation="Manual"
+        AllowsTransparency="True"
+        ShowInTaskbar="False"
+        Background="#01000000"
+
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        RenderOptions.BitmapScalingMode="HighQuality">
+
+
+    <!-- Анимация капли -->
+    <Window.Resources>
+
+        <GridLength x:Key="Col_FIO">2*</GridLength>
+        <GridLength x:Key="Col_Phone">1*</GridLength>
+        <GridLength x:Key="Col_Email">1*</GridLength>
+        <GridLength x:Key="Col_Position">1*</GridLength>
+        <GridLength x:Key="Col_Birth">1*</GridLength>
+
+
+        <QuadraticEase x:Key="SmoothEase" EasingMode="EaseOut"/>
+        <local:AvatarUrlConverter x:Key="AvatarUrlConverter"/>
+
+        <Style x:Key="EmployeeCardButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource VortexNeonButton}">
+
+            <Setter Property="Width" Value="Auto"/>
+            <!-- ВАЖНО -->
+            <Setter Property="Height" Value="64"/>
+            <Setter Property="Margin" Value="10,8,10,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+
+                        <Border x:Name="Root"
+                                CornerRadius="10"
+                                BorderThickness="1"
+                                BorderBrush="#3300FFFF"
+                                HorizontalAlignment="Stretch">
+
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#072536" Offset="0"/>
+                                    <GradientStop Color="#0A3148" Offset="0.5"/>
+                                    <GradientStop Color="#072536" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+
+
+
+                            <Grid Margin="8" HorizontalAlignment="Stretch">
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- 🔵 АВАТАР -->
+                                <!-- 🔵 АВАТАР -->
+                                <Border x:Name="AvatarNeon"
+                                        Width="46"
+                                        Height="46"
+                                        CornerRadius="23"
+                                        BorderThickness="1"
+                                        BorderBrush="#3300FFFF"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+
+                                    <Grid Width="40" Height="40">
+                                        <Grid.Clip>
+                                            <EllipseGeometry Center="20,20" RadiusX="20" RadiusY="20"/>
+                                        </Grid.Clip>
+
+                                        <Image Stretch="UniformToFill"
+                                               Source="{Binding avatar_path,
+                                               Converter={StaticResource AvatarUrlConverter}}"/>
+                                    </Grid>
+
+                                </Border>
+
+
+                                <!-- ФИО -->
+                                <TextBlock Grid.Column="1"
+                                   Text="{Binding full_name}"
+                                   Foreground="White"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"/>
+
+                                <!-- Телефон -->
+                                <TextBlock Grid.Column="2"
+                                   Text="{Binding phone}"
+                                   Foreground="Cyan"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+
+                                <!-- Email -->
+                                <TextBlock Grid.Column="3"
+                                   Text="{Binding email}"
+                                   Foreground="LightGray"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+
+                                <!-- Должность -->
+                                <TextBlock Grid.Column="4"
+                                   Text="{Binding position}"
+                                   Foreground="LightGray"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="#00FFFF"/>
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2"/>
+                                <Setter TargetName="AvatarNeon" Property="BorderBrush" Value="#00FFFF"/>
+                                <Setter TargetName="AvatarNeon" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стиль для заголовков таблицы сотрудников -->
+        <Style x:Key="HeaderStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FFFBFBFB"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+    </Window.Resources>
+
+    <!-- Основная рамка -->
+    <Border CornerRadius="15"
+            Margin="20"
+            Background="#80000000">
+
+        <Border.Effect>
+            <DropShadowEffect Color="Black"
+                              BlurRadius="25"
+                              ShadowDepth="0"
+                              Opacity="0.5"/>
+        </Border.Effect>
+
+        <Grid Margin="15">
+
+            <vortex:VortexDropLine Margin="0,54,25,570"/>
+
+            <!-- 🔹 Верхняя панель: кнопка слева + текст справа -->
+            <Grid Height="50" VerticalAlignment="Top">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <!-- Кнопка -->
+                    <ColumnDefinition Width="*"/>
+                    <!-- Текст -->
+                    <ColumnDefinition Width="250"/>
+                    <!-- Добавить сотрудника -->
+                </Grid.ColumnDefinitions>
+
+                <!-- Кнопка Выхода из окна -->
+                <Button x:Name="Ex_Clouse"
+                        Style="{StaticResource VortexNeonButton}"
+                        Width="40" Height="40"
+                        Margin="16,4,4,6"
+
+                        vortex:ButtonProps.GifSource="Assets/Images/exit2.gif"
+                        vortex:ButtonProps.GifWidth="35"
+                        vortex:ButtonProps.GifHeight="35"
+                        vortex:ButtonProps.GifMargin="5,7,0,0"
+                        vortex:ButtonProps.GifOffsetX="1"
+                        vortex:ButtonProps.GifOffsetY="0"
+                        vortex:ButtonProps.GifMode="OnHover"
+                        
+                        vortex:ButtonProps.SkewDirection="Left"
+                
+                        vortex:ButtonProps.NeonSide="Bottom"
+
+                        vortex:ButtonProps.TransformOrigin="0,0"
+
+                        Click="CloseButton_Click"/>
+
+                <!-- Кнопка Список -->
+                <Button x:Name="Spis"
+                        Style="{StaticResource VortexNeonButton}"
+                        Width="NaN" Height="20"
+                        Grid.Column="2"
+                        Margin="47,62,151,-32"
+                        
+                        vortex:ButtonProps.TextSource="Список"
+                        vortex:ButtonProps.TextSize="12"
+                        vortex:ButtonProps.TextColor="White"
+                        vortex:ButtonProps.TextMargin="0,0,0,0"
+
+                        vortex:ButtonProps.SkewDirection="Left"
+ 
+                        vortex:ButtonProps.NeonSide="Bottom"
+
+                        vortex:ButtonProps.TransformOrigin="0,0"
+
+                        Click="Spis_Click"/>
+
+                <!-- Кнопка Карта -->
+                <Button x:Name="Map"
+                        Style="{StaticResource VortexNeonButton}"
+                        Width="52" Height="20"
+                        Grid.Column="2"
+                        Margin="109,62,89,-32"
+
+                        vortex:ButtonProps.TextSource="Карта"
+                        vortex:ButtonProps.TextSize="12"
+                        vortex:ButtonProps.TextColor="White"
+                        vortex:ButtonProps.TextMargin="0,0,0,0"
+
+                        vortex:ButtonProps.SkewDirection="Left"
+ 
+                        vortex:ButtonProps.NeonSide="Bottom"
+
+                        vortex:ButtonProps.TransformOrigin="0,0"
+
+                         />
+
+                <!-- Кнопка Архив -->
+                <Button x:Name="ARC"
+                        Style="{StaticResource VortexNeonButton}"
+                        Width="52" Height="20"
+                        Margin="170,62,28,-32"
+                        Grid.Column="2"
+
+                        vortex:ButtonProps.TextSource="Архив"
+                        vortex:ButtonProps.TextSize="12"
+                        vortex:ButtonProps.TextColor="White"
+                        vortex:ButtonProps.TextMargin="0,0,0,0"
+
+                        vortex:ButtonProps.SkewDirection="Left"
+ 
+                        vortex:ButtonProps.NeonSide="Bottom"
+
+                        vortex:ButtonProps.TransformOrigin="0,0"
+
+                        Click="ARC_Click" />
+
+
+                <!-- Текст Сотрудники -->
+                <TextBlock Grid.Column="1"
+                                   Text="Сотрудники"
+                                   Foreground="White"
+                                   FontSize="32"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,405,0"/>
+
+
+                <!-- Кнопка Добавить сотрудника -->
+                <Button x:Name="Ex_23"
+                        Style="{StaticResource VortexNeonButton}"
+                        Width="NaN" Height="40"
+                        Margin="13,4,22,6"
+
+                        vortex:ButtonProps.GifSource="Assets/Images/user.gif"
+                        vortex:ButtonProps.GifWidth="40"
+                        vortex:ButtonProps.GifHeight="40"
+                        vortex:ButtonProps.GifMargin="-170,6,0,0"
+                        vortex:ButtonProps.GifOffsetX="0"
+                        vortex:ButtonProps.GifOffsetY="-5"
+                        vortex:ButtonProps.GifMode="OnHover"
+                        
+                        vortex:ButtonProps.TextSource="Добавить сотрудника"
+                        vortex:ButtonProps.TextSize="16"
+                        vortex:ButtonProps.TextColor="White"
+                        vortex:ButtonProps.TextMargin="30,0,0,0"
+         
+                        vortex:ButtonProps.SkewDirection="Left"
+ 
+                        vortex:ButtonProps.NeonSide="Bottom"
+                        
+                        vortex:ButtonProps.TransformOrigin="1,1"
+
+                        Click="AddEmployee_Click" Grid.Column="2"/>
+
+            </Grid>
+
+            <!-- Основной контент -->
+            <ScrollViewer x:Name="EmployeesScroll"
+              Margin="0,85,0,30"
+              VerticalScrollBarVisibility="Auto"
+              PreviewMouseWheel="EmployeesScroll_PreviewMouseWheel">
+
+                <Grid x:Name="EmployeesPanel"
+                      Margin="10,0,10,10"
+                      HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                </Grid>
+
+            </ScrollViewer>
+
+        </Grid>
+
+    </Border>
+
+</Window>

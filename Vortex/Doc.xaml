@@ -13,7 +13,7 @@
               LoadedBehavior="Manual" 
               UnloadedBehavior="Manual"
               IsMuted="True" 
-              Stretch="UniformToFill" Margin="0,0,-20,0" />
+              Stretch="UniformToFill" Margin="0,0,-20,0"/>
 
         <!-- Приветственный текст VORTEX -->
         <TextBlock Text="VORTEX" 
@@ -46,12 +46,12 @@
         </TextBlock>
 
         <!-- Приветственный текст VORTEX -->
-        <TextBlock Text="future industries" 
+        <TextBlock Text="technologies" 
                    FontSize="13" 
                    FontWeight="Bold" 
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Top" 
-                   Margin="179,366,0,0" Height="22" Width="123" FontFamily="Verdana">
+                   Margin="208,366,0,0" Height="22" Width="94" FontFamily="Verdana">
             <TextBlock.Foreground>
                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                     <GradientStop Color="#FF133F61" Offset="1"/>
@@ -80,12 +80,12 @@
             <!-- Поле для ввода пароля -->
             <TextBlock x:Name="PasswordPlaceholder" Text="Пароль:" Foreground="White" 
                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="38,136,0,0" 
-                       FontFamily="Microsoft JhengHei Light" Height="15" Width="172"/>
+                       FontFamily="Microsoft JhengHei Light" Height="15" Width="172" IsHitTestVisible="False" Focusable="False"/>
 
             <!-- Кнопка входа -->
             <Button x:Name="LoginButton" Width="150" Height="30" Content="Вход" 
                           VerticalAlignment="Top" HorizontalAlignment="Left" Margin="28,210,0,0" 
-                           Click="LoginButton_Click" IsDefault="True">
+                           Click="LoginButton_Click" IsDefault="True" TabIndex="6" IsTabStop="True">
 
                 <Button.RenderTransform>
                     <TransformGroup>
@@ -179,29 +179,31 @@
             <!-- Поле для ввода логина -->
             <TextBox x:Name="UsernameTextBox" Width="332" Height="30" Margin="0,92,0,0" 
                     VerticalAlignment="Top" HorizontalAlignment="Center" 
-                    BorderBrush="{x:Null}" VerticalContentAlignment="Center" FontSize="22" Text=""/>
+                    BorderBrush="{x:Null}" VerticalContentAlignment="Center" FontSize="22" Text="" TabIndex="2" IsTabStop="True"/>
 
             <TextBlock x:Name="UsernamePlaceholder" Text="Логин:" Foreground="White" VerticalAlignment="Top" 
-                       HorizontalAlignment="Left" Margin="38,76,0,0" FontFamily="Microsoft JhengHei Light" Height="14" Width="172"/>
+                       HorizontalAlignment="Left" Margin="38,76,0,0" FontFamily="Microsoft JhengHei Light" Height="14" Width="172" IsHitTestVisible="False" Focusable="False"/>
 
             <!-- Поле для ввода Названий компаний -->
             <TextBox x:Name="UsernameTextBox1" Width="332" Height="30" Margin="0,35,0,0" 
                      VerticalAlignment="Top" HorizontalAlignment="Center" 
-                     BorderBrush="{x:Null}" VerticalContentAlignment="Center" FontSize="22" Text=""/>
+                     BorderBrush="{x:Null}" VerticalContentAlignment="Center" FontSize="22" Text="" TabIndex="1"
+                       IsTabStop="True"/>
 
             <TextBlock x:Name="UsernamePlaceholder1" Text="Компания:" Foreground="White" VerticalAlignment="Top" 
-                       HorizontalAlignment="Left" Margin="38,18,0,0" FontFamily="Microsoft JhengHei Light" Height="14" Width="172"/>
+                       HorizontalAlignment="Left" Margin="38,18,0,0" FontFamily="Microsoft JhengHei Light" Height="14" Width="172" IsHitTestVisible="False" Focusable="False"/>
 
             <!-- Чекбокс для запоминания логина -->
             <CheckBox x:Name="RememberLoginCheckBox" Content="Запомнить логин" 
                       VerticalAlignment="Top" HorizontalAlignment="Left" Margin="38,186,0,0" 
-                      Foreground="White" Background="White" Width="166" BorderBrush="{x:Null}"/>
+                      Foreground="White" Background="White" Width="166" BorderBrush="{x:Null}" TabIndex="4"
+                        IsTabStop="True"/>
             <!-- Этот CheckBox позволит сохранить логин, чтобы при следующем входе пользователь вводил только пароль -->
 
             <!-- Кнопка выхода -->
             <Button x:Name="LoginButton2" Width="150" Height="30" Content="Выход" 
                     VerticalAlignment="Top" HorizontalAlignment="Left" Margin="208,211,0,0" 
-                    Click="YesButton_Click">
+                    Click="YesButton_Click" TabIndex="5" IsTabStop="True" IsCancel="True">
                 <Button.RenderTransform>
                     <TransformGroup>
                         <ScaleTransform x:Name="scaleTransform1"/>
@@ -290,11 +292,65 @@
                     </ControlTemplate>
                 </Button.Template>
             </Button>
+            
             <PasswordBox x:Name="PasswordBox" Width="332" Height="30" Margin="0,152,0,0" 
              VerticalAlignment="Top" HorizontalAlignment="Center" 
-             BorderBrush="{x:Null}" FontSize="22" VerticalContentAlignment="Center"/>
+             BorderBrush="{x:Null}" FontSize="22" VerticalContentAlignment="Center" TabIndex="3"
+             IsTabStop="True"/>
 
         </Grid>
+
+        <Grid x:Name="UpdateOverlay"
+      Visibility="Collapsed"
+      Background="#CC000000"
+      IsHitTestVisible="True"
+      Focusable="True"
+      Panel.ZIndex="999">
+
+            <StackPanel HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="420">
+
+                <!-- Логотип -->
+                <TextBlock Text="VORTEX"
+                   FontSize="48"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Foreground="White"/>
+
+                <!-- Текст -->
+                <TextBlock x:Name="UpdateTitleText"
+                   Text="Доступно обновление"
+                   Margin="0,20,0,5"
+                   FontSize="18"
+                   HorizontalAlignment="Center"
+                   Foreground="White"/>
+
+                <TextBlock x:Name="UpdateSubText"
+                   Text=""
+                   FontSize="14"
+                   HorizontalAlignment="Center"
+                   Foreground="#CCCCCC"/>
+
+                <!-- Прогресс -->
+                <ProgressBar x:Name="UpdateProgress"
+                     Margin="0,20,0,0"
+                     Height="20"
+                     Minimum="0"
+                     Maximum="100"
+                     Visibility="Collapsed"/>
+
+                <TextBlock x:Name="UpdatePercentText"
+                   Margin="0,10,0,0"
+                   FontSize="14"
+                   HorizontalAlignment="Center"
+                   Foreground="White"/>
+
+                
+            </StackPanel>
+        </Grid>
+
+
 
     </Grid>
 

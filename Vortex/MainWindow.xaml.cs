@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Net;
-using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using WpfAnimatedGif;
 
 
 namespace Vortex
@@ -18,171 +16,253 @@ namespace Vortex
     public partial class MainWindow : Window
     {
         private DispatcherTimer _clockTimer;
-        private DispatcherTimer _weatherTimer;
         private TextBlock _txtInButton;
-        private TextBlock _txtPogoda;
-        private TextBlock _txtSotr; // 🟢 добавляем (если захочешь кэшировать ссылку)
-        private bool _isShown = false;
-        private List<Button> bottomRow = new List<Button>();
-        private List<Button> topRow = new List<Button>();
+        private EmployeesWindow employeesWindow;
+        public WindowManager manager;
+        private bool _toolsOpened;
+        private Button[] _toolsButtons;
+        private Popup _hoverPopup;
+        private TextBlock _hoverText;
+        private DispatcherTimer _videoTimer;
+        private DispatcherTimer _hoverAutoHideTimer;
+        private Tools toolsWindow;
+
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // добавляем кнопки в список по порядку
-            // нижний ряд
-            bottomRow.Add(Ex_Инструменты1);
-       
-        
 
-            // верхний ряд
-            topRow.Add(Ex_Инструменты1_1);
-            topRow.Add(Ex_Инструменты2_1);
+            manager = new WindowManager(this);
+            manager.AttachGlobalHotkeys(this);
+            this.Tag = "RunTime";
 
-            // 🟢 Сотрудники
-            sotr.ApplyTemplate();
-            _txtSotr = sotr.Template.FindName("txtpsotr", sotr) as TextBlock;
-
-            // Если шаблон кнопки ещё не прогрузился — дождёмся Loaded
-            if (_txtSotr == null)
-                sotr.Loaded += Sotr_Loaded;
-            else
-                LoadSotrudnikiCount();
-
-            // 🟢 Погода
-            pogoda.ApplyTemplate();
-            _txtPogoda = pogoda.Template.FindName("txtpogoda", pogoda) as TextBlock;
-
-            if (_txtPogoda == null)
-                pogoda.Loaded += Pogoda_Loaded;
-
-            LoadWeather();
-
-            _weatherTimer = new DispatcherTimer();
-            _weatherTimer.Interval = TimeSpan.FromMinutes(10);
-            _weatherTimer.Tick += (s, e) => LoadWeather();
-            _weatherTimer.Start();
-
-            // 🕒 Календарь
-            btnCalendar.ApplyTemplate();
-            _txtInButton = btnCalendar.Template.FindName("txtDateTime", btnCalendar) as TextBlock;
-            if (_txtInButton == null)
-                btnCalendar.Loaded += BtnCalendar_Loaded;
 
             StartClock();
         }
 
-
-        private void Ex_Инструменты_Click(object sender, RoutedEventArgs e)
-        {
-            if (!_isShown)
-            {
-                double startLeft = 120;   // базовая позиция первой кнопки
-                double step = 57;         // расстояние между кнопками
-                double delayStep = 0.2;   // задержка между появлением
-                double offsetX_bottom = 0; // ← смещение нижнего ряда (0 = без сдвига)
-                double offsetX_top = 17;    // ← смещение верхнего ряда (вправо на 3px; отрицательное — влево)
-
-                // 🟢 Нижний ряд
-                AnimateRow(
-                    bottomRow,
-                    show: true,
-                    startLeft: startLeft + offsetX_bottom,
-                    step: step,
-                    delayStep: delayStep,
-                    bottomMargin: -10
-                );
-
-                // 🔵 Верхний ряд
-                AnimateRow(
-                    topRow,
-                    show: true,
-                    startLeft: startLeft + offsetX_top,
-                    step: step,
-                    delayStep: delayStep,
-                    bottomMargin: 50
-                );
-            }
-            else
-            {
-                // 🔴 Закрытие (анимация обратная)
-                double offsetX_bottom = 0;
-                double offsetX_top = 3;
-
-                AnimateRow(bottomRow, false, -100 + offsetX_bottom, 50, 0.2, -10);
-                AnimateRow(topRow, false, -100 + offsetX_top, 50, 0.2, 50);
-            }
-
-            _isShown = !_isShown;
-        }
-
-
-        private void AnimateRow(List<Button> row, bool show, double startLeft, double step, double delayStep, double bottomMargin)
-        {
-            for (int i = 0; i < row.Count; i++)
-            {
-                double left = show ? startLeft + i * step : -100;
-                double delay = i * delayStep;
-
-                var moveAnim = new ThicknessAnimation
-                {
-                    To = new Thickness(left, 0, 0, bottomMargin),
-                    Duration = TimeSpan.FromSeconds(0.5),
-                    BeginTime = TimeSpan.FromSeconds(delay),
-                    EasingFunction = new QuadraticEase
-                    {
-                        EasingMode = show ? EasingMode.EaseOut : EasingMode.EaseIn
-                    }
-                };
-
-                var opacityAnim = new DoubleAnimation
-                {
-                    To = show ? 1 : 0,
-                    Duration = TimeSpan.FromSeconds(0.4),
-                    BeginTime = TimeSpan.FromSeconds(delay)
-                };
-
-                row[i].BeginAnimation(MarginProperty, moveAnim);
-                row[i].BeginAnimation(OpacityProperty, opacityAnim);
-            }
-        }
-
-
-
-        // 🕒 Видео фон
+        // 🔸 Обработчик события загрузки окна
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            string videoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Video", "8738602291808.mp4");
+            InitHoverText();
 
-            if (!File.Exists(videoPath))
+            InitToolsSimple();
+
+            string path = System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Assets", "Video", "8738602291808.mp4");
+
+            if (!File.Exists(path))
             {
-                MessageBox.Show("Видео не найдено: " + videoPath);
+                MessageBox.Show("Видео не найдено");
                 return;
             }
 
-            try
+            BgPlayer.Source = new Uri(path, UriKind.Absolute);
+            BgPlayer.MediaOpened += BgPlayer_MediaOpened;
+            BgPlayer.Play();
+        }
+
+        // 🔸 Добавить кнопки инструментов сюда
+        private void InitToolsSimple()
+        {
+            _toolsButtons = new Button[]
+               {
+                 // 🔸 Нижний ряд (слева → направо)
+                 Tools,
+                 Ex_Инструменты12,
+                 Ex_Инструменты123,
+
+                 // 🔹 Верхний ряд (слева → направо)
+                 Ex_Инструменты1_1,
+                 Ex_Инструменты1_12,
+                 Ex_Инструменты1_123
+                };
+
+
+            foreach (var b in _toolsButtons)
             {
-                BackgroundVideo.Source = new Uri(videoPath, UriKind.Absolute);
-                BackgroundVideo.Play();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Ошибка воспроизведения видео: " + ex.Message);
+                if (b == null) continue;
+
+                // transform вместо Margin
+                b.RenderTransform = new TranslateTransform(-120, 0);
+                b.Opacity = 0;
+                b.IsHitTestVisible = false;
             }
         }
 
-        // 🕒 Видео фон
-        private void BackgroundVideo_MediaEnded(object sender, RoutedEventArgs e)
+        // 🔸 Настройки анимаций кнопки инструменты
+        private void Ex_Инструменты_Click(object sender, RoutedEventArgs e)
         {
-            BackgroundVideo.Position = TimeSpan.Zero;
-            BackgroundVideo.Play();
+            _toolsOpened = !_toolsOpened;
+
+            int columns = _toolsButtons.Length / 2; // верх + низ
+
+            for (int col = 0; col < columns; col++)
+            {
+                int lowerIndex = col;
+                int upperIndex = col + columns;
+
+                TimeSpan delay = TimeSpan.FromMilliseconds(col * 240); // скорость "волны"
+
+                AnimateButton(_toolsButtons[lowerIndex], delay);
+                AnimateButton(_toolsButtons[upperIndex], delay);
+            }
         }
 
-        // 🕒 Видео фон
-        private void BackgroundVideo_MediaFailed(object sender, ExceptionRoutedEventArgs e)
+        // 🔸 Настройки анимаций кнопки инструменты
+        private void Animate(object target, double to, TimeSpan delay)
         {
-            MessageBox.Show("Ошибка загрузки видео: " + e.ErrorException.Message);
+            DoubleAnimation anim = new DoubleAnimation
+            {
+                To = to,
+                Duration = TimeSpan.FromMilliseconds(720),   // ⬅ медленнее
+                BeginTime = delay,
+                EasingFunction = new QuinticEase              // ⬅ мягче
+                {
+                    EasingMode = EasingMode.EaseOut
+                }
+            };
+
+            if (target is TranslateTransform tt)
+                tt.BeginAnimation(TranslateTransform.XProperty, anim);
+            else if (target is UIElement el)
+                el.BeginAnimation(UIElement.OpacityProperty, anim);
+        }
+
+        // 🔸 Анимация кнопки инструменты
+        private void AnimateButton(Button b, TimeSpan delay)
+        {
+            if (b == null) return;
+
+            var tt = (TranslateTransform)b.RenderTransform;
+
+            double toX = _toolsOpened ? 0 : -120;
+            double toOpacity = _toolsOpened ? 1 : 0;
+
+            b.IsHitTestVisible = _toolsOpened;
+
+            Animate(tt, toX, delay);
+            Animate(b, toOpacity, delay);
+        }
+        // 🔸 Добавить кнопки инструментов сюда для отоброжения текста при наведении
+        private void InitHoverText()
+        {
+            _hoverText = new TextBlock
+            {
+                Foreground = Brushes.White,
+                FontSize = 14,
+                Padding = new Thickness(10, 4, 10, 4),
+                Background = new SolidColorBrush(Color.FromArgb(200, 20, 20, 20))
+            };
+
+            Border border = new Border
+            {
+                CornerRadius = new CornerRadius(6),
+                Background = _hoverText.Background,
+                Child = _hoverText,
+                RenderTransformOrigin = new Point(0.5, 1),
+                RenderTransform = new ScaleTransform(1, 0) // 🔥 вместо Opacity
+            };
+
+            _hoverPopup = new Popup
+            {
+                Child = border,
+                Placement = PlacementMode.Top,
+                StaysOpen = true,
+                AllowsTransparency = true,   // 🔥 ВАЖНО
+                IsHitTestVisible = false,
+                IsOpen = true
+            };
+
+
+            _hoverAutoHideTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(3)
+            };
+
+            _hoverAutoHideTimer.Tick += (s, e) =>
+            {
+                _hoverAutoHideTimer.Stop();
+                AnimateHover(0);
+            };
+
+            // регистрация кнопок
+            RegisterHover(Tools, "Настройки");
+            RegisterHover(Ex_Инструменты12, "Сотрудники");
+            RegisterHover(Ex_Инструменты123, "Добавить сотрудника");
+
+            RegisterHover(Ex_Инструменты1_1, "Сотрудники (верх)");
+            RegisterHover(Ex_Инструменты1_12, "Отчёты");
+            RegisterHover(Ex_Инструменты1_123, "Статистика");
+        }
+
+        private void AnimateHover(double to)
+        {
+            if (_hoverPopup?.Child is Border border &&
+                border.RenderTransform is ScaleTransform st)
+            {
+                var anim = new DoubleAnimation
+                {
+                    To = to == 1 ? 1 : 0,
+                    Duration = TimeSpan.FromMilliseconds(180),
+                    EasingFunction = new QuadraticEase
+                    {
+                        EasingMode = EasingMode.EaseOut
+                    }
+                };
+
+                st.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
+            }
+        }
+
+        // 🔸 Обработчик наведения для кнопок инструментов
+        private void RegisterHover(Button btn, string text)
+        {
+            if (btn == null) return;
+
+            btn.MouseEnter += (s, e) =>
+            {
+                _hoverText.Text = text;
+                _hoverPopup.PlacementTarget = btn;
+
+                _hoverAutoHideTimer.Stop();
+                AnimateHover(1);          // 🔥 ПОКАЗ
+                _hoverAutoHideTimer.Start();
+            };
+
+            btn.MouseLeave += (s, e) =>
+            {
+                _hoverAutoHideTimer.Stop();
+                AnimateHover(0);          // 🔥 СКРЫТЬ
+            };
+        }
+
+        // 🔸 Обработчик видеофона: начало воспроизведения
+        private void BgPlayer_MediaOpened(object sender, RoutedEventArgs e)
+        {
+            _videoTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(120)
+            };
+
+            _videoTimer.Tick += VideoLoopTick;
+            _videoTimer.Start();
+        }
+
+        // 🔸 Обработчик видеофона: зацикливание
+        private void VideoLoopTick(object sender, EventArgs e)
+        {
+            if (!BgPlayer.NaturalDuration.HasTimeSpan)
+                return;
+
+            var duration = BgPlayer.NaturalDuration.TimeSpan;
+
+            // 🔴 КЛЮЧ: не даём дойти до конца
+            if (BgPlayer.Position >= duration - TimeSpan.FromMilliseconds(300))
+            {
+                BgPlayer.Position = TimeSpan.FromMilliseconds(80);
+            }
         }
 
         // 🚪 Кнопка выхода из программы
@@ -190,301 +270,123 @@ namespace Vortex
         {
             Application.Current.Shutdown();
         }
-
-        // 🟢 При наведении — запустить анимацию
-        private void Exit_MouseEnter(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                var btn = sender as Button;
-                if (btn == null) return;
-
-                var gifImage = btn.Template.FindName("GifImage", btn) as Image;
-                if (gifImage == null) return;
-
-                var controller = ImageBehavior.GetAnimationController(gifImage);
-                if (controller != null)
-                {
-                    controller.GotoFrame(0); // начать с первого кадра
-                    controller.Play();        // запустить анимацию
-                }
-                else
-                {
-                    // Если контроллер не найден, принудительно загрузим гифку
-                    var animatedImage = new BitmapImage(new Uri("pack://application:,,,/Assets/Images/import.gif"));
-                    ImageBehavior.SetAnimatedSource(gifImage, animatedImage);
-                    ImageBehavior.SetAutoStart(gifImage, true);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Ошибка при запуске гифки: " + ex.Message);
-            }
-        }
-
-        // 🔴 При уходе — остановить и вернуть первый кадр
-        private void Exit_MouseLeave(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                var btn = sender as Button;
-                if (btn == null) return;
-
-                var gifImage = btn.Template.FindName("GifImage", btn) as Image;
-                if (gifImage == null) return;
-
-                var controller = ImageBehavior.GetAnimationController(gifImage);
-                if (controller != null)
-                {
-                    controller.Pause();
-                    controller.GotoFrame(0); // вернуть в исходное положение
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Ошибка при остановке гифки: " + ex.Message);
-            }
-        }
-
-        // 🔄 Переключатель режима окна (F11)
-        private void Window_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.F11)
-            {
-                if (this.WindowState == WindowState.Maximized)
-                {
-                    // Переключаем в обычное окно (тестовый адаптивный режим)
-                    this.WindowState = WindowState.Normal;
-                    this.ResizeMode = ResizeMode.CanResize;
-                    this.WindowStyle = WindowStyle.SingleBorderWindow;
-                    this.Width = 1280;
-                    this.Height = 720;
-                }
-                else
-                {
-                    // Возвращаем полноэкранный режим
-                    this.WindowState = WindowState.Maximized;
-                    this.ResizeMode = ResizeMode.NoResize;
-                    this.WindowStyle = WindowStyle.None;
-                }
-            }
-        }
-
+                
         // Обработчик для кнопки "Свернуть"
         private void Minimize_Click(object sender, RoutedEventArgs e)
         {
             this.WindowState = WindowState.Minimized;
         }
 
-        // 🟢 Верхний лейбл При наведении — просто перезапустить гифку
-        private void Ex_MouseEnter(object sender, MouseEventArgs e)
+        // 🟢 Обработка нажатия на кнопку "Сотрудники"
+        private void Employees_Click(object sender, RoutedEventArgs e)
         {
-            try
+            // 1️⃣ Если окно уже открыто — закрываем через менеджер
+            if (employeesWindow != null && employeesWindow.IsVisible)
             {
-                if (sender is Button btn)
+                foreach (Window w in Application.Current.Windows)
                 {
-                    var gifImage = btn.Template.FindName("GifImage", btn) as Image;
-                    if (gifImage == null) return;
-
-                    var controller = ImageBehavior.GetAnimationController(gifImage);
-                    if (controller != null)
-                    {
-                        controller.GotoFrame(0); // с первого кадра
-                        controller.Play();        // запустить снова
-                    }
-                    else
-                    {
-                        // если не найден контроллер — создаём гиф заново
-                        var animatedImage = new BitmapImage(new Uri("pack://application:,,,/Assets/Images/import.gif"));
-                        ImageBehavior.SetAnimatedSource(gifImage, animatedImage);
-                        ImageBehavior.SetAutoStart(gifImage, true);
-                        ImageBehavior.SetRepeatBehavior(gifImage, System.Windows.Media.Animation.RepeatBehavior.Forever);
-                    }
+                    if (w is AddEmployeeWindow)
+                        w.Close();
                 }
+
+                manager.CloseAnimatedWindow(employeesWindow);
+                employeesWindow = null;
+                return;
             }
-            catch (Exception ex)
+
+            // 2️⃣ Если не открыто — создаём (покажется само через менеджер)
+            employeesWindow = new EmployeesWindow(manager);
+            employeesWindow.Owner = this;
+
+            employeesWindow.Closed += (_, __) =>
             {
-                Console.WriteLine("Ошибка при наведении: " + ex.Message);
-            }
+                employeesWindow = null;
+            };
         }
 
-        // 🔴 Верхний лейбл При уходе — ничего не останавливаем (пусть гиф крутится вечно)
-        private void Ex_MouseLeave(object sender, MouseEventArgs e)
+
+        // 🟢 Главное окно: изменён размер
+        private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            try
-            {
-                if (sender is Button btn)
-                {
-                    var gifImage = btn.Template.FindName("GifImage", btn) as Image;
-                    if (gifImage == null) return;
-
-                    var controller = ImageBehavior.GetAnimationController(gifImage);
-                    if (controller != null)
-                    {
-                        // просто продолжаем крутить — без Pause
-                        controller.Play();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Ошибка при уходе курсора: " + ex.Message);
-            }
+            manager.UpdateAll();
         }
 
-        // Календарь
-        // 🕒 Автообновление даты и времени на кнопке
-        private void BtnCalendar_Loaded(object sender, RoutedEventArgs e)
+        // 🟢 Главное окно: перемещение на экране
+        private void MainWindow_LocationChanged(object sender, EventArgs e)
         {
-            btnCalendar.ApplyTemplate();
-            _txtInButton = btnCalendar.Template.FindName("txtDateTime", btnCalendar) as TextBlock;
-            UpdateNow(); // Обновим сразу, как нашли
+            manager.UpdateAll();
         }
 
-        // 🕒 Автообновление даты и времени на кнопке
+        // 🟢 Главное окно: изменение состояния (Normal/Maximized)
+        private void MainWindow_StateChanged(object sender, EventArgs e)
+        {
+            if (this.WindowState != WindowState.Minimized)
+                manager.UpdateAll();
+        }
+
+        // 🟢 Таймер обновления состояния интерфейса
         private void StartClock()
         {
             _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _clockTimer.Tick += (s, e) => UpdateNow();
             _clockTimer.Start();
-            UpdateNow(); // моментальный первый вывод
+            UpdateNow();
         }
 
-        // 🕒 Автообновление даты и времени на кнопке
+        // 🟢 Метод обновления отображаемого времени
         private void UpdateNow()
         {
-            // Формат: "Ср, 29.10.2025\n20:43:12"
             var culture = new CultureInfo("ru-RU");
+
             string day = DateTime.Now.ToString("ddd", culture);
-            // Приведём к "Ср" с заглавной буквы
             day = culture.TextInfo.ToTitleCase(day);
 
             string date = DateTime.Now.ToString("dd.MM.yyyy", culture);
             string time = DateTime.Now.ToString("HH:mm:ss", culture);
 
+            string text = $"{day}, {date}\n{time}";
+
+            // Старый вариант: внутренняя кнопка с txtDateTime
             if (_txtInButton != null)
-                _txtInButton.Text = $"{day}, {date}\n          {time}";
+                _txtInButton.Text = text;
+
+            // Новый вариант: VORTEX кнопка
+            if (btnClock != null)
+                ButtonProps.SetTextSource(btnClock, text);
         }
 
-        // Оставляем обработчики, как ты просил, ничего не делаем
-        private void Ex_Calendar(object sender, RoutedEventArgs e) { }
-
-        // 🟢 Функция загрузки погоды из Google Sheets
-        private void Pogoda_Loaded(object sender, RoutedEventArgs e)
+        // 🟢 Кнопка окна настройки
+        private void ToolsButton_Click(object sender, RoutedEventArgs e)
         {
-            _txtPogoda = pogoda.Template.FindName("txtpogoda", pogoda) as TextBlock;
-            LoadWeather();
-        }
-
-        // 🟢 Погода
-        private async void LoadWeather()
-        {
-            try
+            // 1️⃣ ЕСЛИ ОКНО УЖЕ ОТКРЫТО → ЗАКРЫВАЕМ
+            if (toolsWindow != null && toolsWindow.IsVisible)
             {
-                string url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTVN1kC-5uPhdBGi5l9NGQcgsAzw8jd5_MvxsHb_s3H4YyBjxQ6QZon1sdEqXOktJHXBOork-lw0amD/pub?gid=1861136659&single=true&output=csv";
-
-                using (var client = new WebClient())
-                {
-                    client.Encoding = Encoding.UTF8;
-
-                    // 👇 Асинхронное ожидание (не блокирует интерфейс)
-                    string csv = await client.DownloadStringTaskAsync(url);
-
-                    string[] lines = csv.Split('\n');
-
-                    string city = "";
-                    string temperature = "";
-
-                    foreach (var line in lines)
-                    {
-                        if (string.IsNullOrWhiteSpace(line)) continue;
-
-                        string[] parts = line.Split(',');
-                        if (parts.Length < 2) continue;
-
-                        string key = parts[0].Trim().Replace("\"", "");
-                        string value = parts[1].Trim().Replace("\"", "");
-
-                        if (key == "Город")
-                            city = value;
-                        else if (key == "Температура сейчас")
-                            temperature = value;
-                    }
-
-                    if (_txtPogoda != null)
-                    {
-                        if (!string.IsNullOrEmpty(city) && !string.IsNullOrEmpty(temperature))
-                            _txtPogoda.Text = $"{city}\n{temperature}";
-                        else
-                            _txtPogoda.Text = "Нет данных";
-                    }
-                }
+                manager.CloseAnimatedWindow(toolsWindow);
+                toolsWindow = null;
+                return;
             }
-            catch (Exception ex)
+
+            // 2️⃣ ЕСЛИ НЕ ОТКРЫТО → ОТКРЫВАЕМ
+            toolsWindow = new Tools(manager, this);
+            toolsWindow.Owner = this;
+
+            toolsWindow.Closed += (_, __) =>
             {
-                if (_txtPogoda != null)
-                    _txtPogoda.Text = "Ошибка";
-                Console.WriteLine("Ошибка погоды: " + ex.Message);
-            }
+                toolsWindow = null;
+            };
         }
 
-        // 🟢 Кнопка погода нажать
-        private void Ex_pogoda(object sender, RoutedEventArgs e)
-        {
-            LoadWeather();
-        }
 
-        // 🟢 Когда кнопка "Сотрудники" готова — ищем текст и обновляем
-        private void Sotr_Loaded(object sender, RoutedEventArgs e)
-        {
-            _txtSotr = sotr.Template.FindName("txtpsotr", sotr) as TextBlock;
-            LoadSotrudnikiCount();
-        }
 
-        // 🧭 Загрузка данных о количестве сотрудников (без зависаний)
-        private async void LoadSotrudnikiCount()
-        {
-            try
-            {
-                // ⚙️ ссылка на твой лист "Сотрудники"
-                string url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQK1ZKl5ICKREKat0WHoyLBz-HW6pZubzWQcRZGTNUclyt-RCeW-bnCD0btiDzjPC6Kp57AyiOQsPfV/pub?output=csv&gid=0\r\n";
 
-                if (_txtSotr == null)
-                    _txtSotr = sotr.Template.FindName("txtpsotr", sotr) as TextBlock;
 
-                if (_txtSotr != null)
-                    _txtSotr.Text = "загрузка...";
 
-                using (var client = new WebClient())
-                {
-                    // 💤 скачиваем асинхронно, чтобы не зависал UI
-                    string csvData = await client.DownloadStringTaskAsync(new Uri(url));
-                    string[] lines = csvData.Split('\n');
 
-                    if (lines.Length > 1)
-                    {
-                        string a2 = lines[1].Split(',')[0].Trim();
-                        if (_txtSotr != null)
-                            _txtSotr.Text = string.IsNullOrEmpty(a2) ? "0" : a2;
-                    }
-                    else if (_txtSotr != null)
-                    {
-                        _txtSotr.Text = "нет данных";
-                    }
-                }
-            }
-            catch
-            {
-                if (_txtSotr != null)
-                    _txtSotr.Text = "ошибка";
-            }
-        }
 
-        // 🟢 Обработка нажатия на кнопку "Сотрудники"
-        private void Ex_sotr(object sender, RoutedEventArgs e)
-        {
-            LoadSotrudnikiCount();
-        }
+
+
+
+
 
 
     }
